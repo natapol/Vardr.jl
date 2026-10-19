@@ -1,0 +1,7 @@
+name = "Vardr"
+uuid = "c3f8dcc1-9e26-4394-ba7e-d81f83bc0b50"
+authors = ["Natapol Pornputtapong <natapol.p@chula.ac.th>"]
+version = "1.0.0-DEV"
+
+[compat]
+julia = "1.10"
