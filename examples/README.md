@@ -1,0 +1,27 @@
+# Vardr.jl examples
+
+Each script is self-contained. It simulates a "real system" with known ground truth,
+builds a twin from imperfect prior knowledge, and reports how well the twin recovers the
+truth.
+
+Set up the environment once (from the repository root):
+
+```sh
+julia --project=examples -e 'using Pkg; Pkg.develop(path="."); Pkg.instantiate()'
+```
+
+Then run any example with threads enabled:
+
+```sh
+julia --project=examples -t auto examples/lorenz63_twin.jl
+```
+
+| Example | System | What it demonstrates |
+|---|---|---|
+| [`oscillator_twin.jl`](oscillator_twin.jl) | Damped oscillator, 2 states | The basics: joint state–parameter estimation with the EnKF, forecast, a what-if `scenario`, `compare` |
+| [`sir_epidemic_twin.jl`](sir_epidemic_twin.jl) | SIR epidemic (ModelingToolkit) | MTK models with symbolic indexing, replaying data with `TableSource` + `run!`, intervention scenarios |
+| [`lorenz63_twin.jl`](lorenz63_twin.jl) | Lorenz-63, chaotic | Keeping a chaotic system synchronized from a single observed variable; open-loop vs assimilated error; forecast skill and ensemble spread as a predictability estimate |
+| [`pkpd_patient_twin.jl`](pkpd_patient_twin.jl) | Two-compartment PK + effect-site Emax PD | A personalized medical twin: repeated dosing via a model callback, sparse and mixed measurements (`NaN` = not measured), nonlinear `h(u, p, t)` that depends on estimated parameters, comparing dosing regimens for efficacy and toxicity |
+| [`thermal_room_twin.jl`](thermal_room_twin.jl) | 2R2C building model with thermostat | Live operation: a sensor thread feeding `ChannelSource`, sinks that forecast and raise alerts, `SnapshotSink`, `WallClock` through a sensor outage with rollback of provisional ticks, querying the twin while it runs, retrofit what-ifs |
+| [`heat_rod_twin.jl`](heat_rod_twin.jl) | 1-D heat equation, 40 cells | A high-dimensional (PDE) twin with fewer ensemble members than unknowns; covariance localization vs an unlocalized EnKF and a 300-member reference |
+| [`tank_leak_detection_twin.jl`](tank_leak_detection_twin.jl) | Three-tank process (ModelingToolkit) | Fault detection: tracking an unmeasured tank and a leak coefficient that changes abruptly, a credible-interval alarm, and operator decision support (throughput vs overflow risk) |
