@@ -31,8 +31,12 @@ data ──▶ step!(twin, obs) = predict!(twin, obs.t) + assimilate!(twin, obs)
 
 - New to Vardr? Follow the [Tutorial](@ref "Tutorial: your first twin"): one twin, built
   step by step, in about 10 minutes.
-- Building your own twin? See [Models and sensors](@ref) and
-  [State and parameter estimation](@ref), then the recipe on the [Examples](@ref) page.
+- Building your own twin? Follow the [Step-by-step workflow](@ref), which goes from
+  the question to deployment with a check at every step.
+- Want to understand the methods? The **Theory** chapters derive what Vardr computes,
+  with references: [Digital twins and state-space models](@ref),
+  [Bayesian filtering and data assimilation](@ref), and
+  [Prediction, calibration and verification](@ref).
 - Using a twin for decisions: [Forecasts and what-if scenarios](@ref).
 - Deploying: [Running live](@ref) and [Calibration and persistence](@ref).
 - Something wrong: [Troubleshooting](@ref).

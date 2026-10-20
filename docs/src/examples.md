@@ -18,10 +18,12 @@ julia --project=examples -t auto examples/thermal_room_twin.jl
 | `lorenz63_twin.jl` | Lorenz-63 (chaotic) | Synchronizing from one observed variable; forecast skill vs ensemble spread | [State and parameter estimation](@ref), [Forecasts and what-if scenarios](@ref) |
 | `pkpd_patient_twin.jl` | Two-compartment PK/PD | Dosing callbacks, sparse mixed measurements (`NaN`), nonlinear `h` with estimated parameters, regimen comparison | [Models and sensors](@ref), [Forecasts and what-if scenarios](@ref) |
 | `thermal_room_twin.jl` | 2R2C building with a thermostat | Live `ChannelSource`, alert sinks, `SnapshotSink`, `WallClock` outages with rollback, retrofit what-ifs | [Running live](@ref) |
-| `heat_rod_twin.jl` | 1-D heat equation, 40 cells | High-dimensional twin, covariance localization | [Localization](@ref) |
+| `heat_rod_twin.jl` | 1-D heat equation, 40 cells | High-dimensional twin, covariance localization | [Localization](@ref guide-localization) |
 | `tank_leak_detection_twin.jl` | Three-tank process (ModelingToolkit) | Fault detection, unmeasured states, abrupt parameter change, decision support | [State and parameter estimation](@ref), [Forecasts and what-if scenarios](@ref) |
 
 ## Building your own twin: a recipe
+
+A short version of the [Step-by-step workflow](@ref):
 
 1. **Model.** Write `f(u, p, t)`, or an MTK system, with named states and parameters.
    Simulate it and check that it behaves plausibly.

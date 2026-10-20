@@ -79,18 +79,20 @@ stop!(runner)
 
 ## Documentation
 
-The [documentation](https://natapol.github.io/Vardr.jl/dev/) has a step-by-step tutorial
-and a user guide. Every code block in it runs when the docs are built.
+The [documentation](https://natapol.github.io/Vardr.jl/dev/) has a tutorial, a
+step-by-step workflow, a user guide, and theory chapters with references. Every code block in it runs when the docs are built.
 
 | Page | What you'll learn |
 |---|---|
 | [Tutorial](docs/src/guide/tutorial.md) | Build, synchronize, query, forecast and save a twin, end to end |
+| [Step-by-step workflow](docs/src/guide/workflow.md) | The method, from the question to deployment, on a worked case (a clogging tank): identifiability, synthetic tests, tuning with coverage and innovation statistics, alerts, decisions |
 | [Models and sensors](docs/src/guide/models.md) | Plain-function and ModelingToolkit models, solvers, time-varying inputs, callbacks, custom measurement functions, missing data |
 | [State and parameter estimation](docs/src/guide/estimation.md) | Every `Twin` keyword; choosing and tuning `EnKF` and `ParticleFilter`; localization; reading the belief; checking that a twin works |
 | [Forecasts and what-if scenarios](docs/src/guide/whatif.md) | Forecast bands and probabilities, `SetParameter` / `SetState` / `Event`, comparing decisions with custom metrics |
 | [Calibration and persistence](docs/src/guide/calibration.md) | Offline fitting with `calibrate!`, and when to use it rather than online estimation; snapshots and restarts |
 | [Running live](docs/src/guide/live.md) | `run!`, built-in and custom sources and sinks, alerts, outages and `WallClock`, late data, concurrency, a production checklist |
 | [Troubleshooting](docs/src/guide/troubleshooting.md) | Divergence, collapsing parameters, solver failures, performance |
+| Theory: [concepts](docs/src/theory/concepts.md), [filtering](docs/src/theory/filtering.md), [prediction](docs/src/theory/prediction.md) | State-space models and the augmented state; the Kalman filter, EnKF (inflation, localization) and particle filter as implemented; forecasting, calibration, identifiability and verification, with [references](docs/src/refs.bib) |
 
 Build the docs locally with
 `julia --project=docs -e 'using Pkg; Pkg.develop(path="."); Pkg.instantiate(); include("docs/make.jl")'`.
@@ -99,12 +101,15 @@ Build the docs locally with
 
 [`examples/`](examples/README.md) contains complete, runnable twins with ground truth:
 
-- **Oscillator** and **SIR epidemic** (ModelingToolkit): the basics
-- **Lorenz-63**: keeping a chaotic system synchronized from one observed variable
-- **PK/PD patient twin**: personalized dosing with repeated doses and sparse lab samples
-- **Live thermal room**: streaming sensors, alerts, outage handling, retrofit what-ifs
-- **Heated rod (1-D PDE)**: a 41-unknown twin with covariance localization
-- **Three-tank leak detection** (ModelingToolkit): fault detection and operator decision support
+| Example | System | What it demonstrates |
+|---|---|---|
+| [`oscillator_twin.jl`](examples/oscillator_twin.jl) | Damped oscillator | The basics: joint state–parameter EnKF, forecast, a what-if `scenario`, `compare` |
+| [`sir_epidemic_twin.jl`](examples/sir_epidemic_twin.jl) | SIR epidemic (ModelingToolkit) | Symbolic models, replaying data with `TableSource` + `run!`, intervention scenarios |
+| [`lorenz63_twin.jl`](examples/lorenz63_twin.jl) | Lorenz-63 (chaotic) | Keeping a chaotic system synchronized from one observed variable; forecast skill vs ensemble spread |
+| [`pkpd_patient_twin.jl`](examples/pkpd_patient_twin.jl) | Two-compartment PK/PD | Personalized dosing: dosing callbacks, sparse mixed measurements (`NaN`), comparing regimens for efficacy and toxicity |
+| [`thermal_room_twin.jl`](examples/thermal_room_twin.jl) | 2R2C building with a thermostat | Live operation: `ChannelSource`, alert sinks, `SnapshotSink`, `WallClock` outages, retrofit what-ifs |
+| [`heat_rod_twin.jl`](examples/heat_rod_twin.jl) | 1-D heat equation, 40 cells | A high-dimensional (PDE) twin with covariance localization |
+| [`tank_leak_detection_twin.jl`](examples/tank_leak_detection_twin.jl) | Three-tank process (ModelingToolkit) | Fault detection with unmeasured states, and operator decision support |
 
 ## Status
 
