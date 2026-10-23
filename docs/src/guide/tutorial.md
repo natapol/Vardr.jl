@@ -177,6 +177,12 @@ twin2[:k] == twin[:k]
 
 ## Where next
 
+- [Step-by-step workflow](@ref): the method for building a twin you can trust, from
+  the question to deployment, on a complete worked case.
+- Theory: [Digital twins and state-space models](@ref),
+  [Bayesian filtering and data assimilation](@ref), and
+  [Prediction, calibration and verification](@ref).
+
 - [Models and sensors](@ref): ModelingToolkit models, inputs, callbacks, and custom
   measurement functions.
 - [State and parameter estimation](@ref): choosing and tuning estimators.

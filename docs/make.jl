@@ -2,12 +2,16 @@
 # Build a PDF manual instead:       julia --project=docs docs/make.jl pdf
 using Vardr
 using Documenter
+using DocumenterCitations
+
+const BIB = CitationBibliography(joinpath(@__DIR__, "src", "refs.bib"); style = :authoryear)
 
 DocMeta.setdocmeta!(Vardr, :DocTestSetup, :(using Vardr); recursive=true)
 
 const PAGES = [
     "Home" => "index.md",
     "Tutorial" => "guide/tutorial.md",
+    "Step-by-step workflow" => "guide/workflow.md",
     "User guide" => [
         "guide/models.md",
         "guide/estimation.md",
@@ -16,7 +20,14 @@ const PAGES = [
         "guide/live.md",
         "guide/troubleshooting.md",
     ],
+    "Case study: bioprocess twin" => "cases/bioreactor.md",
+    "Theory" => [
+        "theory/concepts.md",
+        "theory/filtering.md",
+        "theory/prediction.md",
+    ],
     "Examples" => "examples.md",
+    "References" => "references.md",
     "API" => "api.md",
 ]
 
@@ -30,6 +41,7 @@ if "pdf" in ARGS
         format=Documenter.LaTeX(; platform="tectonic", tectonic=tectonic()),
         build="build-pdf",
         pages=PAGES,
+        plugins=[BIB],
     )
 else
     makedocs(;
@@ -39,9 +51,10 @@ else
         format=Documenter.HTML(;
             canonical="https://natapol.github.io/Vardr.jl",
             edit_link="main",
-            assets=String[],
+            assets=String["assets/citations.css"],
         ),
         pages=PAGES,
+        plugins=[BIB],
     )
 
     deploydocs(;

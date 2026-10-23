@@ -10,6 +10,9 @@ A twin needs two descriptions of the real system:
 - a **measurement model**, the [`ObservationModel`](@ref): what the sensors see,
   `y = h(u, p, t) + ε` with `ε ~ N(0, R)`.
 
+Together they form a state-space model; see
+[The state-space model](@ref) for the theory.
+
 ```@setup models
 using Vardr, LinearAlgebra, Statistics
 ```
@@ -123,7 +126,7 @@ See `examples/pkpd_patient_twin.jl` for a complete version.
 
 For a discretized PDE, write an in-place `f!` over the grid and name the cells. For
 example, `states = [Symbol(:T, i) for i in 1:40]`. The twin works the same way. With
-many unknowns, see [Localization](@ref) in the estimation guide.
+many unknowns, see [Localization](@ref guide-localization) in the estimation guide.
 
 ## Measurement models
 
