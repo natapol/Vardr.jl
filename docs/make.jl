@@ -20,6 +20,7 @@ const PAGES = [
         "guide/live.md",
         "guide/troubleshooting.md",
     ],
+    "Case study: bioprocess twin" => "cases/bioreactor.md",
     "Theory" => [
         "theory/concepts.md",
         "theory/filtering.md",

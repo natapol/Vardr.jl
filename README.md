@@ -80,12 +80,13 @@ stop!(runner)
 ## Documentation
 
 The [documentation](https://natapol.github.io/Vardr.jl/dev/) has a tutorial, a
-step-by-step workflow, a user guide, and theory chapters with references. Every code block in it runs when the docs are built.
+step-by-step workflow, a bioprocess case study, a user guide, and theory chapters with references. Every code block in it runs when the docs are built.
 
 | Page | What you'll learn |
 |---|---|
 | [Tutorial](docs/src/guide/tutorial.md) | Build, synchronize, query, forecast and save a twin, end to end |
 | [Step-by-step workflow](docs/src/guide/workflow.md) | The method, from the question to deployment, on a worked case (a clogging tank): identifiability, synthetic tests, tuning with coverage and innovation statistics, alerts, decisions |
+| [Case study: a bioprocess twin](docs/src/cases/bioreactor.md) | A fed-batch bioreactor for a recombinant protein: kinetics and mass balances, online and lab sensors, learning a hidden pump fault, and a chance-constrained feed decision |
 | [Models and sensors](docs/src/guide/models.md) | Plain-function and ModelingToolkit models, solvers, time-varying inputs, callbacks, custom measurement functions, missing data |
 | [State and parameter estimation](docs/src/guide/estimation.md) | Every `Twin` keyword; choosing and tuning `EnKF` and `ParticleFilter`; localization; reading the belief; checking that a twin works |
 | [Forecasts and what-if scenarios](docs/src/guide/whatif.md) | Forecast bands and probabilities, `SetParameter` / `SetState` / `Event`, comparing decisions with custom metrics |
@@ -107,6 +108,7 @@ Build the docs locally with
 | [`sir_epidemic_twin.jl`](examples/sir_epidemic_twin.jl) | SIR epidemic (ModelingToolkit) | Symbolic models, replaying data with `TableSource` + `run!`, intervention scenarios |
 | [`lorenz63_twin.jl`](examples/lorenz63_twin.jl) | Lorenz-63 (chaotic) | Keeping a chaotic system synchronized from one observed variable; forecast skill vs ensemble spread |
 | [`pkpd_patient_twin.jl`](examples/pkpd_patient_twin.jl) | Two-compartment PK/PD | Personalized dosing: dosing callbacks, sparse mixed measurements (`NaN`), comparing regimens for efficacy and toxicity |
+| [`bioreactor_fedbatch_twin.jl`](examples/bioreactor_fedbatch_twin.jl) | Fed-batch *E. coli* bioreactor (biopharma) | A pharmaceutical process twin: online and lab sensors, learning a hidden pump fault, a chance-constrained feed decision ([case study](docs/src/cases/bioreactor.md)) |
 | [`thermal_room_twin.jl`](examples/thermal_room_twin.jl) | 2R2C building with a thermostat | Live operation: `ChannelSource`, alert sinks, `SnapshotSink`, `WallClock` outages, retrofit what-ifs |
 | [`heat_rod_twin.jl`](examples/heat_rod_twin.jl) | 1-D heat equation, 40 cells | A high-dimensional (PDE) twin with covariance localization |
 | [`tank_leak_detection_twin.jl`](examples/tank_leak_detection_twin.jl) | Three-tank process (ModelingToolkit) | Fault detection with unmeasured states, and operator decision support |

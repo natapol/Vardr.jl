@@ -33,6 +33,8 @@ data ──▶ step!(twin, obs) = predict!(twin, obs.t) + assimilate!(twin, obs)
   step by step, in about 10 minutes.
 - Building your own twin? Follow the [Step-by-step workflow](@ref), which goes from
   the question to deployment with a check at every step.
+- Working in pharma or bioprocessing? The [Case study: a bioprocess twin](@ref)
+  applies the workflow to a fed-batch bioreactor and a risk-constrained feed decision.
 - Want to understand the methods? The **Theory** chapters derive what Vardr computes,
   with references: [Digital twins and state-space models](@ref),
   [Bayesian filtering and data assimilation](@ref), and
