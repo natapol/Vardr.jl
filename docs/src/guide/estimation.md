@@ -15,6 +15,12 @@ time data arrives, the twin:
 [`step!`](@ref)`(twin, obs)` does both. The posterior mean is the twin's best guess, and
 the spread is its uncertainty.
 
+!!! info "Theory"
+    The equations behind every estimator on this page, with references, are in
+    [Bayesian filtering and data assimilation](@ref). The meaning of `prior`,
+    `estimate` and `process_noise` is explained in
+    [Digital twins and state-space models](@ref).
+
 ```@setup est
 using Vardr, Distributions, LinearAlgebra, Random, Statistics
 osc(u, p, t) = [u[2], -p[1] * u[1] - p[2] * u[2]]
@@ -119,7 +125,7 @@ EnKF(N = 100, inflation = 1.02, localization = nothing)
 - `N`: more members give better covariance estimates. Cost grows linearly.
 - `inflation`: spreads the ensemble by this factor before each update. Values of
   1.01–1.1 counteract the EnKF's tendency to become overconfident with small ensembles.
-- `localization`: see [Localization](@ref) below.
+- `localization`: see [Localization](@ref guide-localization) below.
 
 ### Particle filter tuning
 
@@ -142,7 +148,7 @@ foreach(o -> step!(pf, o), measurements)
 (k = pf[:k], k_std = uncertainty(pf, :k))
 ```
 
-## Localization
+## [Localization](@id guide-localization)
 
 With fewer members than unknowns (common for spatial models), the EnKF's sample
 covariances contain **spurious correlations**: a sensor at one end of a pipe seems to

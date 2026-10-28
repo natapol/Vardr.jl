@@ -188,6 +188,10 @@ assimilates it, so no data is lost. `runner.rollbacks` counts these events.
 
 ## Late and out-of-order data
 
+The reasoning behind these rules is in
+[Sequential processing of live data](@ref).
+
+
 A twin only moves forward in time. In a live run:
 
 | Situation | What happens |

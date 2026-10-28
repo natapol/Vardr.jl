@@ -27,7 +27,9 @@ Vardr offers two ways to learn parameters:
 | Use for | commissioning: fitting a new twin to historical data | following a system as it runs and drifts |
 
 They work well together: calibrate most parameters once on history, then estimate the
-few that drift online.
+few that drift online. The objective that `calibrate!` minimizes, and when parameters
+can be identified at all, are covered in [Calibration: maximum likelihood](@ref) and
+[Identifiability](@ref).
 
 ## `calibrate!`
 

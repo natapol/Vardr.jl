@@ -14,6 +14,12 @@ without touching the real system:
 Neither changes the twin: they work on samples drawn from its belief, so you can call
 them at any time, even while the twin runs live.
 
+!!! info "Theory"
+    What a forecast distribution represents, and why options are compared on the same
+    samples, is explained in
+    [Forecasting: the predictive distribution](@ref) and
+    [What-if scenarios as interventions](@ref).
+
 ```@setup whatif
 using Vardr, Distributions, LinearAlgebra, Random, Statistics, DataFrames
 osc(u, p, t) = [u[2], -p[1] * u[1] - p[2] * u[2]]

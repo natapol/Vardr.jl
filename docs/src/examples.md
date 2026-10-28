@@ -17,11 +17,14 @@ julia --project=examples -t auto examples/thermal_room_twin.jl
 | `sir_epidemic_twin.jl` | SIR epidemic (ModelingToolkit) | Symbolic models, `TableSource` replay, interventions | [Models and sensors](@ref), [Running live](@ref) |
 | `lorenz63_twin.jl` | Lorenz-63 (chaotic) | Synchronizing from one observed variable; forecast skill vs ensemble spread | [State and parameter estimation](@ref), [Forecasts and what-if scenarios](@ref) |
 | `pkpd_patient_twin.jl` | Two-compartment PK/PD | Dosing callbacks, sparse mixed measurements (`NaN`), nonlinear `h` with estimated parameters, regimen comparison | [Models and sensors](@ref), [Forecasts and what-if scenarios](@ref) |
+| `bioreactor_fedbatch_twin.jl` | Fed-batch *E. coli* bioreactor (biopharma) | Online + sparse lab sensors, parameter-dependent nonlinear `h` (oxygen uptake), learning a hidden pump fault, chance-constrained decision with per-sample parameters | [Case study](@ref "Case study: a bioprocess twin") |
 | `thermal_room_twin.jl` | 2R2C building with a thermostat | Live `ChannelSource`, alert sinks, `SnapshotSink`, `WallClock` outages with rollback, retrofit what-ifs | [Running live](@ref) |
-| `heat_rod_twin.jl` | 1-D heat equation, 40 cells | High-dimensional twin, covariance localization | [Localization](@ref) |
+| `heat_rod_twin.jl` | 1-D heat equation, 40 cells | High-dimensional twin, covariance localization | [Localization](@ref guide-localization) |
 | `tank_leak_detection_twin.jl` | Three-tank process (ModelingToolkit) | Fault detection, unmeasured states, abrupt parameter change, decision support | [State and parameter estimation](@ref), [Forecasts and what-if scenarios](@ref) |
 
 ## Building your own twin: a recipe
+
+A short version of the [Step-by-step workflow](@ref):
 
 1. **Model.** Write `f(u, p, t)`, or an MTK system, with named states and parameters.
    Simulate it and check that it behaves plausibly.
