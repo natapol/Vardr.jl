@@ -23,7 +23,7 @@ function kalman(F, Q, H, R, m, P, data)
     for o in data
         m, P = F * m, F * P * F' + Q
         Kg = P * H' / (H * P * H' + R)
-        m, P = m + Kg * (o.y - H * m), (I - Kg * H) * P
+        m, P = m + Kg * (o.y - H * m), (LinearAlgebra.I - Kg * H) * P
         push!(means, m)
         push!(sds, sqrt.(diag(P)))
     end
