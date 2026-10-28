@@ -22,6 +22,10 @@ julia --project=examples -t auto examples/thermal_room_twin.jl
 | `heat_rod_twin.jl` | 1-D heat equation, 40 cells | High-dimensional twin, covariance localization | [Localization](@ref guide-localization) |
 | `tank_leak_detection_twin.jl` | Three-tank process (ModelingToolkit) | Fault detection, unmeasured states, abrupt parameter change, decision support | [State and parameter estimation](@ref), [Forecasts and what-if scenarios](@ref) |
 
+For checks of Vardr itself against exact answers, which you can reuse as templates for
+validating your own configuration, see
+[Case study: validating Vardr against exact answers](@ref).
+
 ## Building your own twin: a recipe
 
 A short version of the [Step-by-step workflow](@ref):

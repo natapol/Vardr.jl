@@ -11,5 +11,6 @@ include("fixtures.jl")
     @testset "Persistence" include("test_persistence.jl")
     @testset "Streaming" include("test_streaming.jl")
     @testset "ModelingToolkit" include("test_mtk.jl")
+    @testset "Validation" include("test_validation.jl")
     @testset "Code quality" include("test_quality.jl")
 end

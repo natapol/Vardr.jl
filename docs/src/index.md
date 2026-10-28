@@ -35,6 +35,8 @@ data ──▶ step!(twin, obs) = predict!(twin, obs.t) + assimilate!(twin, obs)
   the question to deployment with a check at every step.
 - Working in pharma or bioprocessing? The [Case study: a bioprocess twin](@ref)
   applies the workflow to a fed-batch bioreactor and a risk-constrained feed decision.
+- Can you trust the results? [Case study: validating Vardr against exact answers](@ref)
+  checks every estimator against exact solutions, with acceptance criteria.
 - Want to understand the methods? The **Theory** chapters derive what Vardr computes,
   with references: [Digital twins and state-space models](@ref),
   [Bayesian filtering and data assimilation](@ref), and
