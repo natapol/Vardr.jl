@@ -76,7 +76,7 @@ function tank(u, p, t)
             -r]                                            # outlet coefficient
 end
 
-model = TwinModel(tank, [1.6, 0.45], [2.0, 0.0, 1.0];
+model = ODEModel(tank, [1.6, 0.45], [2.0, 0.0, 1.0];
     states = [:h, :c], params = [:A, :r, :s])
 ```
 
@@ -162,7 +162,7 @@ only as good as its ability to cope with surprises.
 disturbance(t) = 0.04 * sin(2π * t / 5.3) + 0.03 * sin(2π * t / 2.1)   # unmodelled
 real_tank(u, p, t) = [(inflow(t) + disturbance(t) - u[2] * sqrt(max(u[1], 0.0))) / 2.0,
                       -0.003]                       # true clogging rate 0.003 /h
-real_system = TwinModel(real_tank, [1.44, 0.5], Float64[])
+real_system = ODEModel(real_tank, [1.44, 0.5], Float64[])
 
 tobs = 0.25:0.25:30.0
 truth = Dict{Float64, Vector{Float64}}()
@@ -365,7 +365,7 @@ stays the same:
 | Step | Code | Done when |
 |:---|:---|:---|
 | 1 | — | the question, horizon and actions are written down |
-| 2 | `TwinModel(f, u0, p; states, params)` | simulations are physically plausible |
+| 2 | `ODEModel(f, u0, p; states, params)` | simulations are physically plausible |
 | 3 | `ObservationModel(model, vars, σ)` | every sensor maps to the model, with a realistic σ |
 | 4 | `Vardr.propagate` / `forecast` with perturbed values | unknowns change outputs by ≫ σ |
 | 5 | a "real" model with unmodelled effects | noisy synthetic data exists |

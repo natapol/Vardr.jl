@@ -1,10 +1,12 @@
-const SNAPSHOT_VERSION = 1
+const SNAPSHOT_VERSION = 2
 
 """
     snapshot(path, twin)
 
 Save the twin's dynamic state (time, belief, fixed parameters, history and RNG
-state) to a JLD2 file. Model code and the observation function are not saved.
+state) to a JLD2 file. Model code and the observation function are not saved. The
+belief includes the members' latent objects, such as the agents of an
+[`AgentModel`](@ref), so these must be types that JLD2 can store.
 Reconstruct the twin with the same code, then call [`restore!`](@ref).
 """
 function snapshot(path::AbstractString, twin::Twin)

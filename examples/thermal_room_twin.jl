@@ -40,7 +40,7 @@ end
 pnames = [:Ca, :Cw, :Raw, :Rv, :Rwo, :P, :η]
 # The setpoint switches at known hours; stop the solver there so it doesn't step over them.
 switches = sort(vcat([[24d + 5, 24d + 22] for d in 0:4]...))
-building(p, u0) = TwinModel(room, u0, p; states = [:Ta, :Tw], params = pnames,
+building(p, u0) = ODEModel(room, u0, p; states = [:Ta, :Tw], params = pnames,
     tstops = float.(switches))
 
 # --- The real building: worse insulation and a less efficient heater than designed -------

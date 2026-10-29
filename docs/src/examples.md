@@ -21,6 +21,8 @@ julia --project=examples -t auto examples/thermal_room_twin.jl
 | `thermal_room_twin.jl` | 2R2C building with a thermostat | Live `ChannelSource`, alert sinks, `SnapshotSink`, `WallClock` outages with rollback, retrofit what-ifs | [Running live](@ref) |
 | `heat_rod_twin.jl` | 1-D heat equation, 40 cells | High-dimensional twin, covariance localization | [Localization](@ref guide-localization) |
 | `tank_leak_detection_twin.jl` | Three-tank process (ModelingToolkit) | Fault detection, unmeasured states, abrupt parameter change, decision support | [State and parameter estimation](@ref), [Forecasts and what-if scenarios](@ref) |
+| `hybrid_bioreactor_twin.jl` | Batch bioreactor with unknown growth kinetics | [`NeuralODEModel`](@ref) as a hybrid model, gradient-based training with `calibrate!`, fine-tuning a network weight online | [Neural and hybrid ODE models](@ref guide-neural) |
+| `agent_epidemic_twin.jl` | Agent-based epidemic, 5000 people in 3 age groups | [`AgentModel`](@ref) with a particle filter, two observed streams, `Event` interventions on agents | [Agent-based models](@ref guide-agents) |
 
 For checks of Vardr itself against exact answers, which you can reuse as templates for
 validating your own configuration, see

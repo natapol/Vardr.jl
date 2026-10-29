@@ -80,7 +80,7 @@ end
 
 @testset "error handling" begin
     bad(u, p, t) = t > 0.5 ? [NaN, NaN] : osc(u, p, t)
-    m = TwinModel(bad, [1.0, 0.0], [4.0, 0.1]; states = [:x, :v], params = [:k, :c])
+    m = ODEModel(bad, [1.0, 0.0], [4.0, 0.1]; states = [:x, :v], params = [:k, :c])
     tbl = (t = [0.2, 1.0], x = [0.9, 0.0])
     tw = Twin(m, ObservationModel(m, [:x], 0.1); estimator = EnKF(N = 10))
     @test_throws Exception run!(tw, TableSource(tbl))

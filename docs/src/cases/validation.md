@@ -72,7 +72,7 @@ tolerances make that error negligible (``10^{-10}``).
 
 ```@example val
 osc(u, p, t) = [u[2], -p[1]^2 * u[1] - 2p[2] * p[1] * u[2]]
-model = TwinModel(osc, [1.0, 0.0], [1.0, 0.1]; states = [:x, :v], params = [:ω, :ζ],
+model = ODEModel(osc, [1.0, 0.0], [1.0, 0.1]; states = [:x, :v], params = [:ω, :ζ],
     abstol = 1e-10, reltol = 1e-10)
 sensors = ObservationModel(model, [:x], 0.1)
 
@@ -196,7 +196,7 @@ is within 10% of it.
 
 ```@example val
 drift(u, p, t) = [p[1]]
-dmodel = TwinModel(drift, [0.0], [0.0]; states = [:u], params = [:θ],
+dmodel = ODEModel(drift, [0.0], [0.0]; states = [:u], params = [:θ],
     abstol = 1e-10, reltol = 1e-10)
 dsensors = ObservationModel(dmodel, [:u], 0.2)
 ddata = let rng = Xoshiro(2)
@@ -266,7 +266,7 @@ The EnKF is shown for comparison only. It is *expected* to fail here.
 ```@example val
 a, qn, σn = 0.1, 0.3, 0.5
 decay(u, p, t) = [-p[1] * u[1]]
-nmodel = TwinModel(decay, [0.0], [a]; states = [:u], params = [:a],
+nmodel = ODEModel(decay, [0.0], [a]; states = [:u], params = [:a],
     abstol = 1e-10, reltol = 1e-10)
 nsensors = ObservationModel((u, p, t) -> [u[1]^2], [σn]; names = [:y])
 nprior = Normal(0.3, 1.0)

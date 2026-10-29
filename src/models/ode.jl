@@ -1,7 +1,8 @@
 """
 $(TYPEDEF)
 
-The mechanistic core of a twin: an `ODEProblem` plus the solver used to advance it.
+A process model given by an ordinary differential equation: an `ODEProblem` plus the
+solver used to advance it.
 
 Any `ODEProblem` works, including one built from a ModelingToolkit system
 (`ODEProblem(sys, u0map, tspan, pmap)`), in which case states and parameters can be
@@ -9,8 +10,8 @@ referred to by their symbolic names.
 
 # Constructors
 
-    TwinModel(prob::ODEProblem; alg = Tsit5(), solve_kwargs...)
-    TwinModel(f, u0, p; states = nothing, params = nothing, t0 = 0.0, alg = Tsit5(), solve_kwargs...)
+    ODEModel(prob::ODEProblem; alg = Tsit5(), solve_kwargs...)
+    ODEModel(f, u0, p; states = nothing, params = nothing, t0 = 0.0, alg = Tsit5(), solve_kwargs...)
 
 The second form wraps an out-of-place right-hand side `f(u, p, t)` (or in-place
 `f(du, u, p, t)`). Pass `states`/`params` as vectors of `Symbol`s to enable
@@ -18,7 +19,7 @@ name-based indexing without ModelingToolkit.
 
 $(TYPEDFIELDS)
 """
-struct TwinModel{P <: ODEProblem, A, K}
+struct ODEModel{P <: ODEProblem, A, K} <: AbstractTwinModel
     "Template problem; its `u0`, `p` and `tspan[1]` are the nominal initial conditions."
     prob::P
     "ODE solver algorithm."
@@ -27,15 +28,15 @@ struct TwinModel{P <: ODEProblem, A, K}
     solve_kwargs::K
 end
 
-function TwinModel(prob::ODEProblem; alg = Tsit5(), solve_kwargs...)
+function ODEModel(prob::ODEProblem; alg = Tsit5(), solve_kwargs...)
     # Members carry their own (already consistent) states. Without `NoInit`, a
     # ModelingToolkit problem would re-run its initialization system and reset `u0`
     # to the problem's original initial conditions.
     kw = merge((initializealg = SciMLBase.NoInit(),), NamedTuple(solve_kwargs))
-    TwinModel(prob, alg, kw)
+    ODEModel(prob, alg, kw)
 end
 
-function TwinModel(f, u0, p; states = nothing, params = nothing, t0 = 0.0,
+function ODEModel(f, u0, p; states = nothing, params = nothing, t0 = 0.0,
         alg = Tsit5(), solve_kwargs...)
     u0 = collect(float.(u0))
     tspan = (float(t0), float(t0) + 1)
@@ -50,35 +51,31 @@ function TwinModel(f, u0, p; states = nothing, params = nothing, t0 = 0.0,
             throw(ArgumentError("`states` has $(length(states)) names but u0 has $(length(u0)) entries"))
         ODEFunction(f; sys = SymbolCache(states, params, :t))
     end
-    TwinModel(ODEProblem(fun, u0, tspan, p); alg, solve_kwargs...)
+    ODEModel(ODEProblem(fun, u0, tspan, p); alg, solve_kwargs...)
 end
 
-Base.show(io::IO, m::TwinModel) = print(io, "TwinModel(", nstates(m), " states ",
+Base.show(io::IO, m::ODEModel) = print(io, "ODEModel(", nstates(m), " states ",
     statenames(m), ", ", length(m.prob.p isa AbstractVector ? m.prob.p : paramnames(m)),
     " parameters, ", nameof(typeof(m.alg)), ")")
 
-"Number of state variables of the model."
-nstates(m::TwinModel) = length(m.prob.u0)
+nstates(m::ODEModel) = length(m.prob.u0)
 
-"State names of the model (`Symbol`s, or `u1, u2, …` when the model is unnamed)."
-function statenames(m::TwinModel)
+function statenames(m::ODEModel)
     syms = variable_symbols(m.prob)
     isempty(syms) ? [Symbol(:u, i) for i in 1:nstates(m)] :
     [Symbol(_strip_t(s)) for s in syms]
 end
 
-"Parameter names of the model (empty when the model is unnamed)."
-paramnames(m::TwinModel) = [Symbol(string(s)) for s in user_parameters(m)]
-
 # Parameter symbols, minus the `Initial(x)` parameters ModelingToolkit adds internally.
-user_parameters(m::TwinModel) = filter(s -> !startswith(string(s), "Initial("),
+user_parameters(m::ODEModel) = filter(s -> !startswith(string(s), "Initial("),
     collect(parameter_symbols(m.prob)))
 
-# MTK names states like `x(t)`; display them as `x`.
-_strip_t(s) = replace(string(s), r"\(t\)$" => "")
+nominal_state(m::ODEModel) = Float64.(m.prob.u0)
+nominal_params(m::ODEModel) = m.prob.p
+initial_time(m::ODEModel) = float(m.prob.tspan[1])
 
 "Resolve a state reference (`Int`, `Symbol`, or symbolic variable) to its index in `u`."
-function state_index(m::TwinModel, s)
+function state_index(m::ODEModel, s)
     s isa Integer && return Int(s)
     i = variable_index(m.prob, s)
     if i === nothing && s isa Symbol
@@ -89,17 +86,10 @@ function state_index(m::TwinModel, s)
 end
 
 "Read parameter `s` from a parameter object (or anything with `parameter_values`)."
-getparam(m::TwinModel, p, s) = getp(m.prob, s)(p)
+getparam(m::ODEModel, p, s) = getp(m.prob, s)(p)
 
-"Return a copy of the parameter object `p` with parameters `syms` set to `vals`."
-function withparams(m::TwinModel, p, syms, vals)
-    isempty(syms) && return p
-    q = deepcopy(p)
-    for (s, v) in zip(syms, vals)
-        setp(m.prob, s)(q, v)
-    end
-    return q
-end
+"Set parameter `s` of the parameter object `p` to `v`, in place."
+setparam!(m::ODEModel, p, s, v) = setp(m.prob, s)(p, v)
 
 """
 The model's problem with a member's state, parameters and time span.
@@ -107,7 +97,7 @@ The model's problem with a member's state, parameters and time span.
 `build_initializeprob = false` stops ModelingToolkit from recomputing `u0` from its
 `Initial(...)` parameters when an explicit parameter object is passed.
 """
-member_problem(m::TwinModel, u, p, tspan) = remake(m.prob; u0 = u, p, tspan,
+member_problem(m::ODEModel, u, p, tspan) = remake(m.prob; u0 = u, p, tspan,
     build_initializeprob = false)
 
 """
@@ -116,7 +106,7 @@ Solve a member problem with the model's solver and keyword arguments.
 `callback` and `tstops` are combined with any the model was built with (for example a
 dosing schedule), never substituted for them.
 """
-function solve_member(m::TwinModel, prob; callback = nothing, tstops = Float64[],
+function solve_member(m::ODEModel, prob; callback = nothing, tstops = Float64[],
         kwargs...)
     kw = m.solve_kwargs
     cbs = filter(!isnothing, Any[get(kw, :callback, nothing), callback])
@@ -143,29 +133,37 @@ end
 """
 Integrate `u` from `t0` to `t1` with parameters `p` and return the final state.
 """
-function propagate(m::TwinModel, u, p, t0, t1; callback = nothing)
+function propagate(m::ODEModel, u, p, t0, t1; callback = nothing)
     t1 == t0 && return copy(u)
     prob = member_problem(m, copy(u), p, (t0, t1))
     sol = solve_member(m, prob; callback, save_everystep = false, save_start = false,
         save_end = true)
     SciMLBase.successful_retcode(sol) ||
-        throw(ErrorException("model integration failed with retcode $(sol.retcode)"))
+        throw(IntegrationError("model integration failed with retcode $(sol.retcode)"))
     return collect(sol.u[end])
 end
 
+advance(m::ODEModel, u, latent, p, t0, t1, rng; callback = nothing) =
+    (propagate(m, u, p, t0, t1; callback), nothing)
+
 """
-Run `f(i)` for `i in 1:n` across threads. An exception from any iteration is rethrown
-as-is instead of wrapped in a `CompositeException`.
+States at times `ts` (sorted, from `t0` on) of a simulation started from `(u, p)` at
+`t0`, with what-if `interventions`. With `strict = false`, a failed integration returns
+`nothing` instead of throwing.
 """
-function tforeach(f, n::Integer)
-    try
-        Threads.@threads for i in 1:n
-            f(i)
-        end
-    catch e
-        e isa CompositeException && !isempty(e.exceptions) || rethrow()
-        inner = first(e.exceptions)
-        throw(inner isa TaskFailedException ? inner.task.exception : inner)
+function trajectory(m::ODEModel, u, latent, p, t0, ts, rng;
+        interventions = AbstractIntervention[], strict::Bool = true)
+    u = copy(u)
+    p = deepcopy(p)
+    now, callback, tstops = intervention_callbacks(m, interventions, t0)
+    for iv in now
+        apply_now!(m, u, p, iv)
     end
-    return nothing
+    t1 = last(ts) > t0 ? float(last(ts)) : t0 + 1
+    sol = solve_member(m, member_problem(m, u, p, (t0, t1)); saveat = ts, callback, tstops)
+    if !SciMLBase.successful_retcode(sol)
+        strict || return nothing
+        throw(IntegrationError("model integration failed with retcode $(sol.retcode)"))
+    end
+    return states_at(sol, ts)
 end

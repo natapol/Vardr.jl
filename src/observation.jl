@@ -62,7 +62,7 @@ function ObservationModel(h, σ::AbstractVector{<:Real}; names = nothing)
     ObservationModel(h, Diagonal(float.(σ) .^ 2); names)
 end
 
-function ObservationModel(model::TwinModel, vars::AbstractVector, σ)
+function ObservationModel(model::AbstractTwinModel, vars::AbstractVector, σ)
     idx = [state_index(model, v) for v in vars]
     σ = σ isa Real ? fill(float(σ), length(idx)) : float.(σ)
     length(σ) == length(idx) ||

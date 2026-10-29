@@ -25,7 +25,7 @@ eqs = [A * D(h1) ~ q_pump * pump(t) - k12 * flow(h1 - h2),
     A * D(h3) ~ k23 * flow(h2 - h3) - k3 * flow(h3)]
 @mtkcompile tanks = System(eqs, t)
 prob = ODEProblem(tanks, [h1 => 1.2, h2 => 0.85, h3 => 0.6], (0.0, 1.0))
-model = TwinModel(prob)
+model = ODEModel(prob)
 
 # --- The real plant: simulated with Vardr itself (a twin with no uncertainty) ----------
 # The leak opens at t = 60. Each sample of a scenario is one plant trajectory.

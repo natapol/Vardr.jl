@@ -46,15 +46,17 @@ data, or use [`run!`](@ref), which drops (and counts) late data.
 Time only moves forward. To re-run from an earlier point, [`restore!`](@ref) a snapshot
 or build a new twin.
 
-## "model integration failed with retcode …"
+## "IntegrationError: model integration failed with retcode …"
 
 A member's ODE solve failed. Usually a member reached a nonphysical region (a negative
 concentration in a `sqrt` or `log`), or the problem is stiff:
 
 - add `bounds` to keep members physical;
 - guard the right-hand side (`sqrt(max(h, 0))`);
-- use a stiff solver: `TwinModel(prob; alg = Rodas5P())`;
-- reduce an overly wide prior or `process_noise`.
+- use a stiff solver: `ODEModel(prob; alg = Rodas5P())`;
+- reduce an overly wide prior or `process_noise`;
+- for a [`NeuralODEModel`](@ref), bound the network's output (see
+  [Neural and hybrid ODE models](@ref guide-neural)).
 
 ## ModelingToolkit: states reset to their initial values
 
@@ -77,7 +79,7 @@ yourself with `remake`, pass `build_initializeprob = false` and
   allocations inside it.
 - Fewer members: an EnKF with localization often works with 20–50 members, even for
   hundreds of states.
-- Looser solver tolerances (`TwinModel(...; reltol = 1e-4)`). Filter noise usually
+- Looser solver tolerances (`ODEModel(...; reltol = 1e-4)`). Filter noise usually
   dominates integration error.
 - Forecast with fewer `nsamples`, and only the `saveat` points you need.
 - The first `step!` includes compilation time; measure the second.

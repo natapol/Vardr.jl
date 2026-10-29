@@ -22,6 +22,9 @@ Stochastic ensemble Kalman filter (perturbed observations).
   Estimated parameters are global quantities, so they are always updated with the
   unlocalized gain.
 
+For an [`AgentModel`](@ref), the updated summary states are passed to the model's
+`lift` function, which adjusts each member's simulation to match.
+
 $(TYPEDFIELDS)
 """
 struct EnKF{L} <: AbstractEstimator
@@ -76,5 +79,6 @@ function update!(f::EnKF, twin::Twin, obs::Observation)
         X[1:n, :] .+= Cuy * (cholesky(Symmetric(Cyy .* Lyy[obsidx, obsidx] + R)) \ D)
         X[(n + 1):end, :] .+= Cxy[(n + 1):end, :] * innovation
     end
+    haslatent(twin.model) && lift_members!(twin)
     return nothing
 end

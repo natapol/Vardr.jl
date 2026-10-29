@@ -11,7 +11,8 @@ nonlinear or non-Gaussian problems; needs more members than the [`EnKF`](@ref).
 - `resample_threshold`: resample when the effective sample size drops below this
   fraction of `N`.
 - `jitter`: after resampling, perturb particles by this fraction of the posterior
-  standard deviation (regularization against sample impoverishment).
+  standard deviation (regularization against sample impoverishment). For an
+  [`AgentModel`](@ref), only the estimated parameters are perturbed.
 
 $(TYPEDFIELDS)
 """
@@ -43,10 +44,12 @@ function update!(f::ParticleFilter, twin::Twin, obs::Observation)
 
     if ess(b) < f.resample_threshold * nmembers(b)
         σ = std(b)
-        b.X .= b.X[:, systematic_resample(twin.rng, weights(b), nmembers(b))]
+        resample!(b, systematic_resample(twin.rng, weights(b), nmembers(b)))
         fill!(b.logw, 0.0)
         if f.jitter > 0
-            b.X .+= (f.jitter .* σ) .* randn(twin.rng, size(b.X)...)
+            # The state rows of a model with latent objects summarize those objects.
+            rows = haslatent(twin.model) ? ((nu(twin) + 1):size(b.X, 1)) : axes(b.X, 1)
+            b.X[rows, :] .+= (f.jitter .* σ[rows]) .* randn(twin.rng, length(rows), size(b.X, 2))
         end
     end
     return nothing

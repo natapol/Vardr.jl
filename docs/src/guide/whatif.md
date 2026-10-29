@@ -23,11 +23,11 @@ them at any time, even while the twin runs live.
 ```@setup whatif
 using Vardr, Distributions, LinearAlgebra, Random, Statistics, DataFrames
 osc(u, p, t) = [u[2], -p[1] * u[1] - p[2] * u[2]]
-real_system = TwinModel(osc, [1.5, 0.0], [3.0, 0.1])
+real_system = ODEModel(osc, [1.5, 0.0], [3.0, 0.1])
 truth(t) = Vardr.propagate(real_system, [1.5, 0.0], [3.0, 0.1], 0.0, t)
 rng = Xoshiro(42)
 measurements = [Observation(t, truth(t)[1] + 0.05 * randn(rng)) for t in 0.1:0.1:10.0]
-model = TwinModel(osc, [1.0, 0.0], [4.0, 0.1]; states = [:x, :v], params = [:k, :c])
+model = ODEModel(osc, [1.0, 0.0], [4.0, 0.1]; states = [:x, :v], params = [:k, :c])
 twin = Twin(model, ObservationModel(model, [:x], 0.05); estimator = EnKF(N = 100),
     estimate = [:k], prior = MvNormal([1.0, 0.0, 4.0], Diagonal([0.5, 0.5, 1.0] .^ 2)),
     process_noise = 0.01, rng = Xoshiro(1))

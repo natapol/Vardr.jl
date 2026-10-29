@@ -49,25 +49,25 @@ function forecast(twin::Twin, tend::Real; saveat = nothing, nsamples::Integer = 
         rng::AbstractRNG = twin.rng)
     t0 = twin.t
     tend > t0 || throw(ArgumentError("tend = $tend must be after the twin's time t = $t0"))
-    ts = saveat === nothing ? collect(range(t0, tend; length = 101)) : collect(Float64, saveat)
+    ts = output_times(saveat, t0, tend)
     m = twin.model
     n = nu(twin)
-    Z = lock(() -> draw(rng, twin.belief, nsamples), twin.lock)
-    now, callback, tstops = intervention_callbacks(m, collect(interventions), t0)
+    interventions = collect(interventions)
+    check_interventions(interventions, t0)
+    Z, L, rngs = lock(twin.lock) do
+        idx = draw(rng, twin.belief, nsamples)
+        # Latent objects are simulated in place, so forecast from copies.
+        L = isempty(twin.belief.latent) ? fill(nothing, nsamples) :
+            [deepcopy(twin.belief.latent[j]) for j in idx]
+        twin.belief.X[:, idx], L, member_rngs(m, rng, nsamples)
+    end
 
     S = Array{Float64, 3}(undef, n, length(ts), nsamples)
     tforeach(nsamples) do k
         z = @view Z[:, k]
-        u = z[1:n]
-        p = deepcopy(member_params(twin, z))
-        for iv in now
-            apply_now!(m, u, p, iv)
-        end
-        prob = member_problem(m, u, p, (t0, float(tend)))
-        sol = solve_member(m, prob; saveat = ts, callback, tstops)
-        SciMLBase.successful_retcode(sol) ||
-            throw(ErrorException("forecast integration failed with retcode $(sol.retcode)"))
-        for (j, uj) in enumerate(states_at(sol, ts))
+        us = trajectory(m, z[1:n], L[k], member_params(twin, z), t0, ts, rngs[k];
+            interventions)
+        for (j, uj) in enumerate(us)
             S[:, j, k] = uj
         end
     end

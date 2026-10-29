@@ -38,7 +38,7 @@ model from one time to another; we use it to create the ground truth.
 ```@example tutorial
 osc(u, p, t) = [u[2], -p[1] * u[1] - p[2] * u[2]]    # u = [x, v], p = [k, c]
 
-real_system = TwinModel(osc, [1.5, 0.0], [3.0, 0.1])
+real_system = ODEModel(osc, [1.5, 0.0], [3.0, 0.1])
 truth(t) = Vardr.propagate(real_system, [1.5, 0.0], [3.0, 0.1], 0.0, t)
 
 rng = Xoshiro(42)
@@ -50,12 +50,12 @@ An [`Observation`](@ref) is just a time and a vector of measured values.
 
 ## 2. The model
 
-A [`TwinModel`](@ref) wraps the equations, the nominal initial state and the parameters.
+An [`ODEModel`](@ref) wraps the equations, the nominal initial state and the parameters.
 Naming states and parameters lets you refer to them as `:x` or `:k` everywhere.
 Our design value of the spring constant is `k = 4.0`, which is wrong.
 
 ```@example tutorial
-model = TwinModel(osc, [1.0, 0.0], [4.0, 0.1]; states = [:x, :v], params = [:k, :c])
+model = ODEModel(osc, [1.0, 0.0], [4.0, 0.1]; states = [:x, :v], params = [:k, :c])
 statenames(model), paramnames(model)
 ```
 

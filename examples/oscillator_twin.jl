@@ -10,7 +10,7 @@ using Vardr, Distributions, LinearAlgebra, Random
 osc(u, p, t) = [u[2], -p[1] * u[1] - p[2] * u[2]]
 
 # The real system (unknown to the twin) and its sensor
-real_system = TwinModel(osc, [1.5, 0.0], [3.0, 0.1]; states = [:x, :v], params = [:k, :c])
+real_system = ODEModel(osc, [1.5, 0.0], [3.0, 0.1]; states = [:x, :v], params = [:k, :c])
 rng = Xoshiro(42)
 measurements = map(0.1:0.1:10.0) do t
     x = Vardr.propagate(real_system, [1.5, 0.0], [3.0, 0.1], 0.0, t)[1]
@@ -18,7 +18,7 @@ measurements = map(0.1:0.1:10.0) do t
 end
 
 # The twin
-model = TwinModel(osc, [1.0, 0.0], [4.0, 0.1]; states = [:x, :v], params = [:k, :c])
+model = ODEModel(osc, [1.0, 0.0], [4.0, 0.1]; states = [:x, :v], params = [:k, :c])
 twin = Twin(model, ObservationModel(model, [:x], 0.05);
     name = "oscillator", estimator = EnKF(N = 100), estimate = [:k],
     prior = MvNormal([1.0, 0.0, 4.0], Diagonal([0.5, 0.5, 1.0] .^ 2)),

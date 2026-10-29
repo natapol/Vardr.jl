@@ -89,7 +89,7 @@ end
     n = 30
     xs = range(0, 1; length = n)
     rw(u, p, t) = zero(u)
-    mr = TwinModel(rw, zeros(n), [0.0])
+    mr = ODEModel(rw, zeros(n), [0.0])
     sensors = collect(1:3:n)
     taper = [exp(-((xs[i] - xs[j]) / 0.1)^2) for i in 1:n, j in sensors]
     tw = Twin(mr, ObservationModel(mr, sensors, 0.1); prior = randn(Xoshiro(0), n, 6),

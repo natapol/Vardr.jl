@@ -28,7 +28,7 @@ A digital twin: a model, a belief about the real system's state, and the machine
 to keep that belief synchronized with observations.
 
     Twin(model, obs = nothing; estimator = EnKF(), estimate = [], prior = nothing,
-         t0 = model.prob.tspan[1], process_noise = 0, bounds = nothing,
+         t0 = initial time of the model, process_noise = 0, bounds = nothing,
          rng = Random.default_rng(), name = "twin")
 
 # Keywords
@@ -44,9 +44,14 @@ to keep that belief synchronized with observations.
 - `bounds`: `(lower, upper)` vectors over `z`. Members are clamped after every
   prediction and update, for example to keep concentrations non-negative.
 
+`model` is any [`AbstractTwinModel`](@ref). For an [`AgentModel`](@ref), each member
+also gets its own simulation, built by the model's `init` from the member's prior
+draw. Its state rows then come from the simulation, so `process_noise` and `bounds`
+may only be set for the estimated parameters.
+
 $(TYPEDFIELDS)
 """
-mutable struct Twin{M <: TwinModel, O, E <: AbstractEstimator, B <: AbstractBelief, P,
+mutable struct Twin{M <: AbstractTwinModel, O, E <: AbstractEstimator, B <: AbstractBelief, P,
     R <: AbstractRNG}
     name::String
     model::M
@@ -68,14 +73,14 @@ mutable struct Twin{M <: TwinModel, O, E <: AbstractEstimator, B <: AbstractBeli
     lock::ReentrantLock
 end
 
-function Twin(model::TwinModel, obs = nothing; estimator::AbstractEstimator = EnKF(),
-        estimate = Any[], prior = nothing, t0 = model.prob.tspan[1],
-        process_noise = 0.0, bounds = nothing, rng::AbstractRNG = Random.default_rng(),
-        name::AbstractString = "twin")
+function Twin(model::AbstractTwinModel, obs = nothing;
+        estimator::AbstractEstimator = EnKF(), estimate = Any[], prior = nothing,
+        t0 = initial_time(model), process_noise = 0.0, bounds = nothing,
+        rng::AbstractRNG = Random.default_rng(), name::AbstractString = "twin")
     estimate = collect(Any, estimate)
-    p = deepcopy(model.prob.p)
+    p = deepcopy(nominal_params(model))
     θ0 = Float64[getparam(model, p, s) for s in estimate]
-    z0 = vcat(Float64.(model.prob.u0), θ0)
+    z0 = vcat(Float64.(nominal_state(model)), θ0)
     nz = length(z0)
     names = vcat(statenames(model), Symbol[Symbol(string(s)) for s in estimate])
 
@@ -87,11 +92,56 @@ function Twin(model::TwinModel, obs = nothing; estimator::AbstractEstimator = En
     lower, upper = bounds === nothing ? (fill(-Inf, nz), fill(Inf, nz)) :
                    (_expand(bounds[1], nz, "lower bound"), _expand(bounds[2], nz, "upper bound"))
     X = clamp.(X, lower, upper)
+    haslatent(model) && check_latent_twin(model, estimator, noise, lower, upper)
 
     twin = Twin(String(name), model, obs, estimator, initial_belief(estimator, X),
         float(t0), estimate, p, noise, lower, upper, History(names), rng,
         ReentrantLock())
+    haslatent(model) && init_latent!(twin)
     record!(twin.history, twin.t, :init, twin.belief)
+    return twin
+end
+
+# The state rows of a model with latent objects are summaries of those objects, so
+# they cannot be perturbed or clamped directly.
+function check_latent_twin(model, estimator, noise, lower, upper)
+    n = nstates(model)
+    any(!iszero, noise[1:n]) &&
+        throw(ArgumentError("process_noise must be zero for the states of an $(nameof(typeof(model))); its randomness comes from the simulation (noise on estimated parameters is allowed)"))
+    all(isinf, lower[1:n]) && all(isinf, upper[1:n]) ||
+        throw(ArgumentError("bounds cannot be set on the states of an $(nameof(typeof(model))); bound the estimated parameters only"))
+    estimator isa EnKF && !canlift(model) &&
+        throw(ArgumentError("the EnKF shifts member states, so an $(nameof(typeof(model))) needs a `lift` function; or use a ParticleFilter"))
+    return nothing
+end
+
+"Build every member's latent object, and set its state rows from it."
+function init_latent!(twin::Twin)
+    X = twin.belief.X
+    n = nu(twin)
+    rngs = member_rngs(twin.model, twin.rng, size(X, 2))
+    L = Vector{Any}(undef, size(X, 2))
+    tforeach(size(X, 2)) do i
+        z = @view X[:, i]
+        X[1:n, i], L[i] = init_latent(twin.model, z[1:n], member_params(twin, z), rngs[i])
+    end
+    twin.belief.latent = L
+    return twin
+end
+
+"""
+After a filter has moved the state rows of a model with latent objects, adjust each
+latent object to its new state (and take the state it actually reaches).
+"""
+function lift_members!(twin::Twin)
+    X = twin.belief.X
+    n = nu(twin)
+    rngs = member_rngs(twin.model, twin.rng, size(X, 2))
+    L = twin.belief.latent
+    tforeach(size(X, 2)) do i
+        z = @view X[:, i]
+        X[1:n, i], L[i] = lift(twin.model, L[i], z[1:n], member_params(twin, z), rngs[i])
+    end
     return twin
 end
 
@@ -129,6 +179,10 @@ Base.show(io::IO, twin::Twin) = print(io, "Twin(\"", twin.name, "\", t = ", twin
 
 Advance every member of the twin's belief from `twin.t` to model time `t`, adding
 process noise. Members are integrated in parallel across Julia threads.
+
+If an integration fails, an [`IntegrationError`](@ref) is thrown and the belief of an
+ODE twin is left unchanged. (Agent simulations are advanced in place, so after a
+failed step their state is undefined.)
 """
 function predict!(twin::Twin, t::Real; callback = nothing)
     lock(twin.lock) do
@@ -136,14 +190,18 @@ function predict!(twin::Twin, t::Real; callback = nothing)
         t == twin.t && return twin
         # Propagate into a copy so a failed integration leaves the belief untouched.
         X = copy(twin.belief.X)
+        L = copy(twin.belief.latent)
         n = nu(twin)
         t0 = twin.t
+        rngs = member_rngs(twin.model, twin.rng, size(X, 2))
         tforeach(size(X, 2)) do i
             z = @view X[:, i]
-            X[1:n, i] = propagate(twin.model, z[1:n], member_params(twin, z), t0, t;
-                callback)
+            X[1:n, i], lat = advance(twin.model, z[1:n], latent_member(twin.belief, i),
+                member_params(twin, z), t0, t, rngs[i]; callback)
+            isempty(L) || (L[i] = lat)
         end
         twin.belief.X = X
+        twin.belief.latent = L
         dt = t - t0
         if any(!iszero, twin.process_noise)
             X .+= (twin.process_noise .* sqrt(dt)) .* randn(twin.rng, size(X)...)
@@ -222,7 +280,7 @@ parameters, fixed values otherwise.
 """
 function paramvalues(twin::Twin)
     m = mean(twin.belief)
-    syms = user_parameters(twin.model)
+    syms = collect(Any, user_parameters(twin.model))
     if isempty(syms)
         # Unnamed model: parameters are referred to by index.
         syms = twin.p isa AbstractVector ? collect(eachindex(twin.p)) : Any[]
