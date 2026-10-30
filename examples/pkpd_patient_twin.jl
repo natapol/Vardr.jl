@@ -34,7 +34,7 @@ end
 # Because the amount is a parameter, a what-if scenario can change it with SetParameter.
 dosing = DiscreteCallback((u, t, integ) -> t in DOSE_TIMES,
     integ -> (integ.u[1] += integ.p[8]); save_positions = (true, true))
-pk_model(p, dose0) = TwinModel(pkpd, [dose0, 0.0, 0.0], p; states = [:Ac, :Ap, :Ce],
+pk_model(p, dose0) = ODEModel(pkpd, [dose0, 0.0, 0.0], p; states = [:Ac, :Ap, :Ce],
     params = PNAMES, callback = dosing, tstops = DOSE_TIMES)
 
 concentration(u, p) = u[1] / p[2]

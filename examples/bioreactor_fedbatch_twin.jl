@@ -55,7 +55,7 @@ our(u, p) = p[7] * uptake(max(u[2], 0.0), p) * u[1]     # mmol O2 / L / h
 # feed = uptake at mu = mu_set: F0 = (mu_set/Yxs + ms) X V / Sf with X = 10 g/L, V = 5 L.
 pd = [0.6, 0.05, 0.5, 0.04, 0.01, 0.004, 12.0, 500.0,
     0.024, 0.1, 7.0, Inf, 1.0]
-model = TwinModel(bioreactor, [0.2, 20.0, 0.0, 5.0], pd;
+model = ODEModel(bioreactor, [0.2, 20.0, 0.0, 5.0], pd;
     states = [:X, :S, :P, :V], params = PNAMES, tstops = [7.0])
 
 const OTR_MAX = 180.0     # mmol/L/h, oxygen transfer capacity of the vessel

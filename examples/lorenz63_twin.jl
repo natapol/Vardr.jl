@@ -17,7 +17,7 @@ lorenz(u, p, t) = [p[1] * (u[2] - u[1]),
 p_true = [10.0, 28.0, 8 / 3]  # σ, ρ, β
 
 # --- The real system (unknown to the twin) -----------------------------------------------
-model = TwinModel(lorenz, [1.0, 1.0, 1.0], p_true; states = [:x, :y, :z],
+model = ODEModel(lorenz, [1.0, 1.0, 1.0], p_true; states = [:x, :y, :z],
     params = [:σ, :ρ, :β])
 Δt = 0.1                           # sensor sampling interval
 tobs = collect(Δt:Δt:20.0)

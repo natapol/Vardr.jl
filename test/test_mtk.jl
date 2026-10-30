@@ -7,7 +7,7 @@ using OrdinaryDiffEqTsit5: Tsit5
 @variables S(t) I(t) R(t)
 @mtkcompile sir = System([D(S) ~ -β * S * I, D(I) ~ β * S * I - γ * I, D(R) ~ γ * I], t)
 prob = ODEProblem(sir, [S => 0.99, I => 0.01, R => 0.0, β => 0.5, γ => 0.1], (0.0, 1.0))
-m = TwinModel(prob)
+m = ODEModel(prob)
 @test Set(statenames(m)) == Set([:S, :I, :R])
 @test Set(paramnames(m)) == Set([:β, :γ])
 

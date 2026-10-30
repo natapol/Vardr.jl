@@ -1,5 +1,5 @@
 """
-    calibrate!(twin, data, params; alg, lb = nothing, ub = nothing, adtype = SciMLBase.NoAD(), u0 = state(twin), solve_kwargs...)
+    calibrate!(twin, data, params; alg, lb = nothing, ub = nothing, adtype = SciMLBase.NoAD(), u0 = state(twin), nsims = 1, seed = 1, solve_kwargs...)
 
 Fit model parameters `params` (names or indices) to a batch of observations by
 maximizing the Gaussian likelihood under the twin's observation model, simulating
@@ -7,7 +7,15 @@ from `u0` at `twin.t`. All observations must be at or after `twin.t`.
 
 `alg` is any Optimization.jl optimizer, e.g. `NelderMead()` after
 `using OptimizationOptimJL`. Gradient-based optimizers need an `adtype` such as
-`AutoForwardDiff()`.
+`AutoForwardDiff()` (after `using ForwardDiff`). This is the way to train the
+weights of a [`NeuralODEModel`](@ref): pass [`weightnames`](@ref)`(model)` as
+`params`.
+
+For a stochastic [`AgentModel`](@ref), each evaluation of the loss simulates `nsims`
+replicates from `u0` with fixed seeds (common random numbers, so the loss is a
+deterministic function of the parameters), and fits the mean of their summary
+states. This simulated-moments fit ignores the model's own randomness; it gives a
+starting point, which online estimation with a [`ParticleFilter`](@ref) can refine.
 
 On success the fitted values replace the twin's fixed parameters. If a parameter is
 also estimated online, its member values are shifted so that their mean equals the
@@ -15,7 +23,7 @@ fitted value. Returns the Optimization.jl solution.
 """
 function calibrate!(twin::Twin, data::AbstractVector{Observation}, params;
         alg, lb = nothing, ub = nothing, adtype = SciMLBase.NoAD(), u0 = state(twin),
-        solve_kwargs...)
+        nsims::Integer = 1, seed::Integer = 1, solve_kwargs...)
     twin.obs === nothing && throw(ArgumentError("calibration needs an observation model"))
     isempty(data) && throw(ArgumentError("no observations to calibrate against"))
     params = collect(Any, params)
@@ -28,15 +36,17 @@ function calibrate!(twin::Twin, data::AbstractVector{Observation}, params;
     ts = unique([o.t for o in data])
     Rinv = [inv(Symmetric(twin.obs.R[mask, mask])) for mask in observed_mask.(data)]
     base_p = member_params(twin, mean(twin.belief))
-    tend = last(ts)
-    tspan = (twin.t, tend == twin.t ? tend + 1 : tend)
+    nsims = haslatent(m) ? nsims : 1
 
     function loss(θ, _)
         p = withparams(m, base_p, params, θ)
-        prob = member_problem(m, collect(u0), p, tspan)
-        sol = solve_member(m, prob; saveat = ts)
-        SciMLBase.successful_retcode(sol) || return Inf
-        us = states_at(sol, ts)
+        us = nothing
+        for r in 1:nsims
+            rng = haslatent(m) ? Xoshiro(seed + r - 1) : nothing
+            ur = trajectory(m, collect(u0), nothing, p, twin.t, ts, rng; strict = false)
+            ur === nothing && return Inf
+            us = us === nothing ? ur ./ nsims : us .+ ur ./ nsims
+        end
         nll = zero(eltype(θ))
         for (o, Ri) in zip(data, Rinv)
             j = searchsortedfirst(ts, o.t)

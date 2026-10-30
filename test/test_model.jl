@@ -7,7 +7,7 @@ m = oscillator_model()
 @test_throws ArgumentError Vardr.state_index(m, :nope)
 
 # Unnamed models get default names
-mu = TwinModel(osc, [1.0, 0.0], [4.0, 0.1])
+mu = ODEModel(osc, [1.0, 0.0], [4.0, 0.1])
 @test statenames(mu) == [:u1, :u2]
 @test isempty(paramnames(mu))
 
@@ -54,7 +54,7 @@ cols = Vardr.Tables.columns(history(tw))
 decay(u, p, t) = [-p[1] * u[1]]
 dose_times = [1.0, 2.0]
 dosing = Vardr.DiscreteCallback((u, t, integ) -> t in dose_times, integ -> (integ.u[1] += 1.0))
-md = TwinModel(decay, [0.0], [0.5]; states = [:A], params = [:k], callback = dosing,
+md = ODEModel(decay, [0.0], [0.5]; states = [:A], params = [:k], callback = dosing,
     tstops = dose_times)
 after_doses = exp(-0.5 * 1.5) + exp(-0.5 * 0.5)  # amount at t = 2.5
 @test Vardr.propagate(md, [0.0], [0.5], 0.0, 2.5)[1] ≈ after_doses rtol = 1e-4

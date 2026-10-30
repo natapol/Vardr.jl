@@ -92,7 +92,7 @@ concentration.
 ``p(u_0)``.
 
 !!! note "In Vardr"
-    - ``f``, the nominal ``u_0`` and ``p``: [`TwinModel`](@ref). The flow ``\mathcal{M}``
+    - ``f``, the nominal ``u_0`` and ``p``: [`ODEModel`](@ref). The flow ``\mathcal{M}``
       is computed by a SciML ODE solver [RackauckasNie2017](@cite), by default `Tsit5`
       [Tsitouras2011](@cite). ModelingToolkit models [MaEtAl2021](@cite) work too.
     - ``h`` and ``R``: [`ObservationModel`](@ref). `ObservationModel(model, [:x], σ)`
@@ -100,6 +100,40 @@ concentration.
     - ``y_k`` at ``t_k``: [`Observation`](@ref)`(t_k, y_k)`.
     - ``p(u_0)``: the `prior` keyword of [`Twin`](@ref).
     - ``\eta_k``: the `process_noise` keyword (see [Model error](@ref) below).
+
+### Beyond hand-written equations
+
+The filters never look inside ``\mathcal{M}``. They only need to run each member
+forward and to evaluate ``h``. So the same machinery works for two other kinds of
+model.
+
+**Learned and hybrid dynamics.** In a neural ODE the right-hand side is a neural
+network, ``f(u, w) = \mathrm{NN}(u; w)`` [ChenEtAl2018](@cite). A hybrid model, or
+universal differential equation, embeds the network in known equations,
+``f(u, p, t) = g\big(u, p, t, \mathrm{NN}(\cdot\,; w)\big)``, so that the network only
+has to learn what the equations leave out
+[PsichogiosUngar1992, RackauckasEtAl2020](@cite). The weights ``w`` are parameters like
+any other. Fitting them to data is calibration, and estimating them online is joint
+state–parameter estimation (with the EnKF this is ensemble Kalman inversion
+[IglesiasLawStuart2013](@cite)).
+
+**Agent-based dynamics.** An agent-based model evolves a large, mostly discrete state
+``x`` (every agent's attributes) by a stochastic simulation,
+``x_k \sim \mathcal{M}(x_{k-1}, p)``. The twin tracks a short *summary*
+``u = s(x)``, such as the number of agents in each compartment, and the observation
+operator acts on the summary. The model error ``\eta`` is no longer an added term: it
+is the simulation's own randomness. The bootstrap particle filter
+[GordonSalmondSmith1993](@cite) only needs to *simulate* from ``\mathcal{M}`` and to
+evaluate the likelihood of ``y`` given ``u``, so it applies directly, with each
+particle carrying a complete simulation. The EnKF instead moves ``u`` by a linear
+update, after which the agents must be changed to match the new summary (a *lift*
+``x \leftarrow L(x, u)``). That step is an approximation that the modeller must
+supply [WardEvansMalleson2016, MallesonEtAl2020](@cite).
+
+!!! note "In Vardr"
+    [`NeuralODEModel`](@ref) and [`AgentModel`](@ref); see
+    [Neural and hybrid ODE models](@ref guide-neural) and
+    [Agent-based models](@ref guide-agents).
 
 ## Unknown parameters: the augmented state
 

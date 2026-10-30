@@ -5,6 +5,7 @@ include("fixtures.jl")
 
 @testset "Vardr.jl" begin
     @testset "Model" include("test_model.jl")
+    @testset "Neural and agent models" include("test_models.jl")
     @testset "Assimilation" include("test_assimilation.jl")
     @testset "What-if" include("test_whatif.jl")
     @testset "Calibration" include("test_calibration.jl")

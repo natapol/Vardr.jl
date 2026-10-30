@@ -3,6 +3,9 @@ $(TYPEDEF)
 
 A probabilistic description of the twin's (augmented) state `z = [u; θ]`, where
 `u` are the model states and `θ` are the parameters being estimated online.
+
+Members of an [`AgentModel`](@ref) also carry a latent simulation object each, in
+`belief.latent` (empty for other models).
 """
 abstract type AbstractBelief end
 
@@ -16,7 +19,10 @@ $(TYPEDFIELDS)
 mutable struct EnsembleBelief <: AbstractBelief
     "Members as columns."
     X::Matrix{Float64}
+    "Latent object of each member (empty when the model has none)."
+    latent::Vector{Any}
 end
+EnsembleBelief(X::Matrix{Float64}) = EnsembleBelief(X, Any[])
 
 """
 $(TYPEDEF)
@@ -30,9 +36,31 @@ mutable struct ParticleBelief <: AbstractBelief
     X::Matrix{Float64}
     "Log importance weights (unnormalized)."
     logw::Vector{Float64}
+    "Latent object of each particle (empty when the model has none)."
+    latent::Vector{Any}
 end
 
-ParticleBelief(X::Matrix{Float64}) = ParticleBelief(X, zeros(size(X, 2)))
+ParticleBelief(X::Matrix{Float64}) = ParticleBelief(X, zeros(size(X, 2)), Any[])
+
+"Latent object of member `i`, or `nothing` when the model has none."
+latent_member(b::AbstractBelief, i) = isempty(b.latent) ? nothing : b.latent[i]
+
+"""
+Keep members `idx` (with repeats), as in resampling. A latent object chosen more than
+once is deep-copied, so that the copies evolve independently.
+"""
+function resample!(b::AbstractBelief, idx)
+    b.X = b.X[:, idx]
+    if !isempty(b.latent)
+        used = falses(length(b.latent))
+        b.latent = map(idx) do j
+            used[j] && return deepcopy(b.latent[j])
+            used[j] = true
+            b.latent[j]
+        end
+    end
+    return b
+end
 
 nmembers(b::AbstractBelief) = size(b.X, 2)
 members(b::AbstractBelief) = b.X
@@ -61,14 +89,14 @@ ess(b::ParticleBelief) = 1 / sum(abs2, weights(b))
 ess(b::EnsembleBelief) = float(nmembers(b))
 
 """
-Return `n` equally weighted columns drawn from the belief (all of them, unweighted,
+Indices of `n` equally weighted members drawn from the belief (all of them, in order,
 when `n` equals the number of members of an `EnsembleBelief`).
 """
 function draw(rng::AbstractRNG, b::EnsembleBelief, n::Integer)
-    n == nmembers(b) && return copy(b.X)
-    return b.X[:, rand(rng, 1:nmembers(b), n)]
+    n == nmembers(b) && return collect(1:n)
+    return rand(rng, 1:nmembers(b), n)
 end
-draw(rng::AbstractRNG, b::ParticleBelief, n::Integer) = b.X[:, systematic_resample(rng, weights(b), n)]
+draw(rng::AbstractRNG, b::ParticleBelief, n::Integer) = systematic_resample(rng, weights(b), n)
 
 "Systematic resampling: `n` indices drawn proportionally to normalized weights `w`."
 function systematic_resample(rng::AbstractRNG, w::AbstractVector, n::Integer = length(w))

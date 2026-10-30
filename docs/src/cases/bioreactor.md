@@ -148,7 +148,7 @@ end
 # Process development values (the "recipe"); F_cap = Inf means no cap yet
 pd = [0.6, 0.05, 0.5, 0.04, 0.01, 0.004, 12.0, 500.0,
     0.024, 0.1, 7.0, Inf, 1.0]
-model = TwinModel(bioreactor, [0.2, 20.0, 0.0, 5.0], pd;
+model = ODEModel(bioreactor, [0.2, 20.0, 0.0, 5.0], pd;
     states = [:X, :S, :P, :V], params = PNAMES, tstops = [7.0])
 ```
 

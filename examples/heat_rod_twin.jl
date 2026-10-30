@@ -36,7 +36,7 @@ function rod!(dT, T, p, t)
 end
 
 names = [Symbol(:T, i) for i in 1:NX]
-model(α, T0) = TwinModel(rod!, T0, [α]; states = names, params = [:α])
+model(α, T0) = ODEModel(rod!, T0, [α]; states = names, params = [:α])
 
 # --- The real rod ------------------------------------------------------------------------
 α_true = 0.002

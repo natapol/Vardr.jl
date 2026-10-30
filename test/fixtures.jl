@@ -9,7 +9,7 @@ const OBS_σ = 0.05
 const OBS_T = collect(0.1:0.1:10.0)
 
 oscillator_model(; u0 = [1.0, 0.0], p = [4.0, 0.1]) =
-    TwinModel(osc, u0, p; states = [:x, :v], params = [:k, :c])
+    ODEModel(osc, u0, p; states = [:x, :v], params = [:k, :c])
 
 const TRUTH = oscillator_model(u0 = TRUE_U0, p = TRUE_P)
 true_state(t) = Vardr.propagate(TRUTH, TRUE_U0, TRUE_P, 0.0, t)

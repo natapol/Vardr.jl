@@ -20,7 +20,7 @@ truth = solve(remake(prob; p = [β => 0.4], tspan = (0.0, 40.0)), Tsit5(); savea
 rng = Xoshiro(7)
 data = [Observation(day, truth[I][k] + 0.002 * randn(rng)) for (k, day) in enumerate(truth.t)]
 
-model = TwinModel(prob)
+model = ODEModel(prob)
 twin = Twin(model, ObservationModel(model, [I], 0.002);
     name = "epidemic", estimator = EnKF(N = 200), estimate = [β],
     process_noise = [0.0, 0.0, 0.0, 0.002], bounds = (zeros(4), fill(Inf, 4)),

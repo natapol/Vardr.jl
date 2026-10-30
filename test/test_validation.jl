@@ -2,7 +2,7 @@
 using OptimizationOptimJL: NelderMead
 
 damped_osc(u, p, t) = [u[2], -p[1]^2 * u[1] - 2p[2] * p[1] * u[2]]
-vmodel = TwinModel(damped_osc, [1.0, 0.0], [1.0, 0.1]; states = [:x, :v], params = [:ω, :ζ],
+vmodel = ODEModel(damped_osc, [1.0, 0.0], [1.0, 0.1]; states = [:x, :v], params = [:ω, :ζ],
     abstol = 1e-10, reltol = 1e-10)
 vsensors = ObservationModel(vmodel, [:x], 0.1)
 Amat(ω, ζ) = [0.0 1.0; -ω^2 -2ζ*ω]
@@ -48,7 +48,7 @@ end
 
 @testset "Augmented-state parameter posterior and calibrate! are exact" begin
     drift(u, p, t) = [p[1]]
-    dm = TwinModel(drift, [0.0], [0.0]; states = [:u], params = [:θ],
+    dm = ODEModel(drift, [0.0], [0.0]; states = [:u], params = [:θ],
         abstol = 1e-10, reltol = 1e-10)
     ds = ObservationModel(dm, [:u], 0.2)
     dd = let rng = Xoshiro(3)
@@ -84,7 +84,7 @@ end
 @testset "Particle filter matches a grid filter on a bimodal posterior" begin
     a, qn, σn = 0.1, 0.3, 0.5
     decay(u, p, t) = [-p[1] * u[1]]
-    nm = TwinModel(decay, [0.0], [a]; states = [:u], params = [:a],
+    nm = ODEModel(decay, [0.0], [a]; states = [:u], params = [:a],
         abstol = 1e-10, reltol = 1e-10)
     ns = ObservationModel((u, p, t) -> [u[1]^2], [σn]; names = [:y])
     nd = let rng = Xoshiro(6), u = -1.2
