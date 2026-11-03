@@ -1,6 +1,6 @@
 name = "Vardr"
 uuid = "c3f8dcc1-9e26-4394-ba7e-d81f83bc0b50"
-version = "0.1.0-DEV"
+version = "0.1.0"
 authors = ["Natapol Pornputtapong <natapol.p@chula.ac.th>"]
 
 [deps]
