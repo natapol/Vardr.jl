@@ -5,6 +5,7 @@
 [![Build Status](https://github.com/natapol/Vardr.jl/actions/workflows/CI.yml/badge.svg?branch=main)](https://github.com/natapol/Vardr.jl/actions/workflows/CI.yml?query=branch%3Amain)
 [![Coverage](https://codecov.io/gh/natapol/Vardr.jl/branch/main/graph/badge.svg)](https://codecov.io/gh/natapol/Vardr.jl)
 [![Aqua](https://raw.githubusercontent.com/JuliaTesting/Aqua.jl/master/badge.svg)](https://github.com/JuliaTesting/Aqua.jl)
+[![Julia General](https://img.shields.io/badge/Julia%20General-registered-9558B2?logo=julia&logoColor=white)](https://juliahub.com/ui/Packages/General/Vardr)
 
 **Vardr.jl** is a general-purpose framework for building **digital twins** in Julia.
 (In Norse folklore a *vörðr* is a warden spirit that follows a person as their double.)
